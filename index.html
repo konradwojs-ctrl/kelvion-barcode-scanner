@@ -1,0 +1,125 @@
+
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+  <title>KELVION Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef3f8;
+      margin: 0;
+      padding: 20px;
+      color: #173b5e;
+    }
+    main { max-width: 500px; margin: auto; }
+    header {
+      background: #173b5e;
+      color: white;
+      padding: 22px;
+      text-align: center;
+      border-radius: 14px;
+    }
+    select, button {
+      width: 100%;
+      padding: 16px;
+      margin-top: 12px;
+      font-size: 18px;
+      border-radius: 12px;
+      box-sizing: border-box;
+    }
+    button {
+      background: #1768b4;
+      color: white;
+      border: none;
+    }
+    #reader {
+      width: 100%;
+      margin-top: 16px;
+    }
+    #result {
+      background: white;
+      padding: 20px;
+      margin-top: 15px;
+      border-radius: 12px;
+      overflow-wrap: anywhere;
+    }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>KELVION</h1>
+    BARCODE SCANNER
+  </header>
+
+  <h3>Wybierz inspektora</h3>
+  <select id="inspektor">
+    <option>Konrad Wojs</option>
+    <option>Jerzy Salek</option>
+  </select>
+
+  <div id="reader"></div>
+
+  <button onclick="startScanner()">
+    Uruchom skaner
+  </button>
+
+  <div id="result">
+    Odczytany numer: <strong id="code">---</strong>
+    <p id="status">Gotowy do skanowania.</p>
+  </div>
+</main>
+
+<script>
+  let scanner = null;
+  let running = false;
+
+  async function startScanner() {
+    if (running) return;
+
+    const status = document.getElementById("status");
+
+    try {
+      if (!scanner) {
+        scanner = new Html5Qrcode("reader", {
+          formatsToSupport: [
+            Html5QrcodeSupportedFormats.CODE_128,
+            Html5QrcodeSupportedFormats.CODE_39
+          ]
+        });
+      }
+
+      await scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: { width: 250, height: 100 } },
+        async function(text) {
+          if (!running) return;
+
+          running = false;
+          document.getElementById("code").textContent = text;
+          status.textContent = "Kod odczytany prawidłowo.";
+
+          try {
+            await scanner.stop();
+          } catch (e) {
+            console.error(e);
+          }
+        },
+        function() {}
+      );
+
+      running = true;
+      status.textContent = "Skieruj aparat na kod.";
+
+    } catch (e) {
+      status.textContent =
+        "Błąd aparatu: " + (e.message || String(e));
+    }
+  }
+</script>
+</body>
+</html>
